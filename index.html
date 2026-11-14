@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulador del Algoritmo del Banquero</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header><span class="eyebrow">SISTEMAS OPERATIVOS · LABORATORIO</span><h1>Algoritmo del Banquero</h1>
+<p>Analiza estados seguros y solicitudes de recursos en tiempo real.</p></header>
+<main>
+<section class="panel">
+<h2>Datos de ejemplo</h2><p class="muted">Matriz Allocation y Maximum (5 procesos × 3 recursos).</p>
+<label>Available <input id="available" value="3,3,2"></label>
+<label>Allocation <textarea id="allocation">0,1,0
+2,0,0
+3,0,2
+2,1,1
+0,0,2</textarea></label>
+<label>Maximum <textarea id="maximum">7,5,3
+3,2,2
+9,0,2
+2,2,2
+4,3,3</textarea></label>
+<div class="actions"><button onclick="checkSafety()">Verificar estado seguro</button></div>
+</section>
+<section class="panel">
+<h2>Solicitud provisional</h2>
+<div class="inline"><label>Proceso (0–4)<input id="process" type="number" min="0" max="4" value="1"></label>
+<label>Request (ej. 1,0,2)<input id="request" value="1,0,2"></label></div>
+<button class="secondary" onclick="checkRequest()">Evaluar petición</button>
+</section>
+<section class="panel result"><h2>Resultado</h2><pre id="output">Los resultados aparecerán aquí.</pre></section>
+</main>
+<footer>Proyecto educativo Flask · No usar como sistema de asignación real.</footer>
+<script>
+function vector(id){return document.getElementById(id).value.trim().split(/[ ,]+/).filter(Boolean).map(Number)}
+function matrix(id){return document.getElementById(id).value.trim().split(/\n/).map(line=>line.trim().split(/[ ,]+/).filter(Boolean).map(Number))}
+async function send(url,payload){
+ const out=document.getElementById('output'); out.textContent='Procesando…';
+ try{const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+ const data=await r.json();out.textContent=JSON.stringify(data,null,2);if(!r.ok)out.textContent='Error: '+(data.error||'Solicitud inválida');}
+ catch(e){out.textContent='No se pudo conectar con el servidor.'}
+}
+function base(){return {available:vector('available'),allocation:matrix('allocation'),maximum:matrix('maximum')}}
+function checkSafety(){send('/api/banker',base())}
+function checkRequest(){send('/api/banker/request',{...base(),process:Number(document.getElementById('process').value),request:vector('request')})}
+</script>
+</body></html>
